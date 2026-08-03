@@ -1,0 +1,228 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>予備試験 学習ログ</title>
+
+<meta name="theme-color" content="#0f1116">
+<meta name="color-scheme" content="dark">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="学習ログ">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="robots" content="noindex, nofollow">
+
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+<link rel="icon" href="icons/icon-192.png" sizes="192x192">
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@300;400;500;600&family=Noto+Sans+JP:wght@400;500;700&display=swap" rel="stylesheet">
+
+<link rel="stylesheet" href="app.css">
+</head>
+
+<body>
+
+<!-- ===================== トークン入力 ===================== -->
+<div id="gate" class="gate">
+  <div class="gate-inner">
+    <h1 class="gate-title">予備試験 学習ログ</h1>
+    <p class="gate-lead">アクセストークンを入力してください。この端末には保存されるので、次回からは不要です。</p>
+    <input id="gate-input" class="gate-input" type="password" autocomplete="off"
+           spellcheck="false" placeholder="トークン" aria-label="アクセストークン">
+    <button id="gate-submit" class="gate-btn" type="button">開く</button>
+    <p id="gate-error" class="gate-error" role="alert" hidden>トークンが違います。</p>
+  </div>
+</div>
+
+<!-- ===================== 本体 ===================== -->
+<div id="app" class="app" hidden>
+
+  <section id="view-record" class="view" data-view="record">
+    <header class="topbar">
+      <span id="record-date" class="topbar-date num"></span>
+      <span class="topbar-today">今日 <b id="record-today" class="num">0:00</b></span>
+    </header>
+    <div id="format-row" class="format-row" role="group" aria-label="学習形式"></div>
+    <div id="subject-tiles" class="tiles"></div>
+  </section>
+
+  <section id="view-dashboard" class="view" data-view="dashboard" hidden>
+    <header class="topbar">
+      <span id="dash-date" class="topbar-date num"></span>
+      <button id="btn-sync" class="linkbtn" type="button">同期</button>
+      <button id="btn-logout" class="linkbtn" type="button">ログアウト</button>
+    </header>
+
+    <div class="card card-ring">
+      <div class="ring-wrap">
+        <svg id="ring-today" class="ring" viewBox="0 0 180 180" aria-hidden="true">
+          <circle class="ring-track" cx="90" cy="90" r="70"></circle>
+          <circle id="ring-arc-1" class="ring-arc ring-arc-1" cx="90" cy="90" r="70"></circle>
+          <circle class="ring-track" cx="90" cy="90" r="55"></circle>
+          <circle id="ring-arc-2" class="ring-arc ring-arc-2" cx="90" cy="90" r="55"></circle>
+        </svg>
+        <div class="ring-center">
+          <div id="ring-value" class="ring-value num">0:00</div>
+          <div id="ring-target" class="ring-target num">目標 2:00</div>
+        </div>
+      </div>
+      <div class="ring-legend">
+        <span><i class="sw sw-1"></i>目標 <b id="legend-target" class="num">120</b>分</span>
+        <span><i class="sw sw-2"></i>好調 <b id="legend-stretch" class="num">180</b>分</span>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="streak">
+        <div id="streak-days" class="streak-num num">0</div>
+        <div class="streak-txt"><b>日連続</b><br><span id="streak-note"></span></div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-h">直近 7 日</div>
+      <div id="week-bars" class="bars"></div>
+    </div>
+
+    <div id="stale-card" class="card" hidden>
+      <div class="card-h">科目バランス</div>
+      <div id="stale-list"></div>
+    </div>
+
+    <div class="card">
+      <div class="card-h">直近 4 週の配分</div>
+      <div class="donut-row">
+        <svg id="donut" class="donut" viewBox="0 0 42 42" aria-hidden="true"></svg>
+        <div id="donut-legend" class="legend"></div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-h">直近 12 週</div>
+      <div id="heatmap" class="heat"></div>
+    </div>
+
+    <div class="card">
+      <div class="totals">
+        <div class="total-item">
+          <div id="total-minutes" class="total-val num">0:00</div>
+          <div class="total-lab">通算学習時間</div>
+        </div>
+        <div class="total-item">
+          <div id="total-days" class="total-val num">0</div>
+          <div class="total-lab">通算日数</div>
+        </div>
+      </div>
+      <div id="countdown" class="countdown"></div>
+    </div>
+  </section>
+
+  <section id="view-history" class="view" data-view="history" hidden>
+    <header class="topbar">
+      <button id="day-prev" class="linkbtn" type="button" aria-label="前の日">‹</button>
+      <span id="day-label" class="topbar-date num"></span>
+      <button id="day-next" class="linkbtn" type="button" aria-label="次の日">›</button>
+      <span class="topbar-today">合計 <b id="day-total" class="num">0:00</b></span>
+    </header>
+    <div id="timeline" class="tl"></div>
+    <button id="btn-add" class="fab" type="button">＋ 記録を手で追加</button>
+  </section>
+
+  <nav class="tabbar" role="tablist">
+    <button class="tab is-on" data-target="record" role="tab" type="button">記録</button>
+    <button class="tab" data-target="dashboard" role="tab" type="button">ダッシュボード</button>
+    <button class="tab" data-target="history" role="tab" type="button">履歴</button>
+  </nav>
+</div>
+
+<!-- ===================== タイマー全画面 ===================== -->
+<div id="timer" class="timer" hidden>
+  <div class="timer-stage">
+    <div class="timer-ringwrap">
+      <svg class="timer-ring" viewBox="0 0 220 220" aria-hidden="true">
+        <circle class="timer-track" cx="110" cy="110" r="94"></circle>
+        <circle id="timer-arc" class="timer-arc" cx="110" cy="110" r="94"></circle>
+      </svg>
+      <div class="timer-center">
+        <div id="timer-digits" class="timer-digits num">0:00</div>
+        <div id="timer-since" class="timer-since num"></div>
+      </div>
+    </div>
+    <div id="timer-subject" class="timer-subject"></div>
+    <div id="timer-format" class="timer-format"></div>
+  </div>
+  <div class="timer-btns">
+    <button id="btn-discard" class="tbtn ghost" type="button">破棄</button>
+    <button id="btn-pause" class="tbtn" type="button">一時停止</button>
+    <button id="btn-stop" class="tbtn stop" type="button">終了</button>
+  </div>
+</div>
+
+<!-- ===================== 編集 / 追加 ===================== -->
+<div id="sheet" class="sheet" hidden>
+  <div class="sheet-panel" role="dialog" aria-modal="true" aria-labelledby="sheet-title">
+    <h2 id="sheet-title" class="sheet-title">記録を編集</h2>
+
+    <label class="field">
+      <span class="field-lab">科目</span>
+      <select id="f-subject" class="field-in"></select>
+    </label>
+    <label class="field">
+      <span class="field-lab">形式</span>
+      <select id="f-format" class="field-in"></select>
+    </label>
+    <div class="field-row">
+      <label class="field">
+        <span class="field-lab">開始</span>
+        <input id="f-start" class="field-in num" type="datetime-local" step="60">
+      </label>
+      <label class="field">
+        <span class="field-lab">終了</span>
+        <input id="f-end" class="field-in num" type="datetime-local" step="60">
+      </label>
+    </div>
+    <label class="field">
+      <span class="field-lab">メモ</span>
+      <textarea id="f-memo" class="field-in" rows="2"></textarea>
+    </label>
+
+    <p id="sheet-error" class="sheet-error" role="alert" hidden></p>
+
+    <div class="sheet-btns">
+      <button id="sheet-delete" class="sbtn danger" type="button">削除</button>
+      <button id="sheet-cancel" class="sbtn" type="button">やめる</button>
+      <button id="sheet-save" class="sbtn primary" type="button">保存</button>
+    </div>
+  </div>
+</div>
+
+<!-- ===================== 止め忘れ ===================== -->
+<div id="runaway" class="sheet" hidden>
+  <div class="sheet-panel" role="dialog" aria-modal="true" aria-labelledby="runaway-title">
+    <h2 id="runaway-title" class="sheet-title">走りっぱなしです</h2>
+    <p id="runaway-msg" class="sheet-lead"></p>
+    <label class="field">
+      <span class="field-lab">終了時刻</span>
+      <input id="runaway-end" class="field-in num" type="datetime-local" step="60">
+    </label>
+    <div class="sheet-btns">
+      <button id="runaway-keep" class="sbtn" type="button">続ける</button>
+      <button id="runaway-fix" class="sbtn primary" type="button">この時刻で終了</button>
+    </div>
+  </div>
+</div>
+
+<div id="toast" class="toast" role="status" aria-live="polite"></div>
+
+<script src="config.js"></script>
+<script src="js/core.js"></script>
+<script src="js/record.js"></script>
+<script src="js/dashboard.js"></script>
+<script src="js/history.js"></script>
+<script src="js/boot.js"></script>
+</body>
+</html>
