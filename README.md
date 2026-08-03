@@ -1,5 +1,7 @@
 # studylog — フロントエンド (PWA)
 
+**公開URL: https://nodamachi.github.io/studylog-app/**
+
 学習時間を記録・可視化する PWA の「殻」。
 GitHub Pages で配信し、データは Google Apps Script の Web アプリを JSON API として叩いて出し入れする。
 
