@@ -1,7 +1,7 @@
 {
-  "name": "予備試験 学習ログ",
-  "short_name": "学習ログ",
-  "description": "予備試験の学習時間を記録・可視化する",
+  "name": "studylog",
+  "short_name": "studylog",
+  "description": "学習時間を記録・可視化する",
   "start_url": "./",
   "scope": "./",
   "display": "standalone",

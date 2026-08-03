@@ -1,6 +1,6 @@
-# 予備試験 学習ログ — フロントエンド
+# studylog — フロントエンド (PWA)
 
-予備試験の学習時間を記録・可視化する PWA の「殻」。
+学習時間を記録・可視化する PWA の「殻」。
 GitHub Pages で配信し、データは Google Apps Script の Web アプリを JSON API として叩いて出し入れする。
 
 **このリポジトリにデータは一切入らない。** 学習記録も認証トークンも Google 側にあり、
@@ -33,7 +33,7 @@ GAS の Web アプリは `script.google.com` のサンドボックス iframe の
 | `sw.js` | Service Worker（殻だけキャッシュ） |
 | `manifest.webmanifest` | PWA マニフェスト |
 
-サーバー側（GAS）のソースは別リポジトリ。ローカルの `C:\Users\white\yobi-studylog`。
+サーバー側（GAS）のソースは別リポジトリ。ローカルの `C:\Users\white\studylog-server`。
 
 ## 通信
 
@@ -66,7 +66,7 @@ action は `verifyToken` / `bootstrap` / `stats` / `sessionsForDay` / `recordedD
 ## 更新のしかた
 
 ```bash
-cd C:/Users/white/yobi-studylog-shell
+cd C:/Users/white/studylog-app
 git add -A
 git commit -m "..."
 git push
@@ -80,7 +80,7 @@ push すると GitHub Pages が数十秒で反映する。
 ## ローカルで確認
 
 ```bash
-cd C:/Users/white/yobi-studylog-shell
+cd C:/Users/white/studylog-app
 npx --yes http-server -p 4173 -c-1
 ```
 
