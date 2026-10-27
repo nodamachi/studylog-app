@@ -28,6 +28,7 @@ GAS の Web アプリは `script.google.com` のサンドボックス iframe の
 | `app.css` | デザイントークンと全スタイル |
 | `config.js` | GAS のエンドポイント URL |
 | `js/core.js` | 通信・状態・画面切替・トースト |
+| `js/offline.js` | 端末内タイマー・未送信の箱・集計の保存(電波なし対応) |
 | `js/record.js` | 記録画面とタイマー |
 | `js/dashboard.js` | ダッシュボードの描画 |
 | `js/history.js` | 履歴と編集ダイアログ |
@@ -56,6 +57,18 @@ CORS のプリフライト（OPTIONS）が飛ぶが、GAS は OPTIONS に応答�
 action は `verifyToken` / `bootstrap` / `stats` / `sessionsForDay` / `recordedDays` /
 `start` / `pause` / `resume` / `stop` / `discard` / `addManual` / `editSession` /
 `deleteSession` / `sync`。
+
+## 電波が無いとき
+
+タイマーは端末の `localStorage` で動き、開始・一時停止・終了で通信しない。
+終えた記録は「未送信の箱」に入り、`addMany` でまとめて送る。記録ごとに端末で
+id を付けるので、返事が届かずに送り直してもサーバー側で二重にならない。
+送るのは「開いたとき」「画面に戻ったとき」「電波が戻ったとき」「記録を終えたとき」。
+iPhone は閉じている間に送れない(バックグラウンド同期が無い)。
+編集・削除は電波があるときだけ。
+
+科目横断の「Anki」はサーバーの `CROSS_SUBJECTS`。今日の合計・目標・連続日数には入り、
+科目の配分と「〇日ぶり」の警告には入らない。
 
 ## トークン
 

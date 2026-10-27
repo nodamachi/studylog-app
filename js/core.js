@@ -14,6 +14,7 @@ var App = {
   view: 'record',
   tickHandle: null,
   prevStreak: null,
+  offline: false,
 };
 
 var TOKEN_KEY = 'yobi_studylog_token';
@@ -24,15 +25,33 @@ var TOKEN_KEY = 'yobi_studylog_token';
  * GAS を叩く。Content-Type を text/plain にしているのは、CORS の単純リクエストに
  * 収めてプリフライト(OPTIONS)を発生させないため。GAS は OPTIONS に応答できない。
  */
+var API_TIMEOUT_MS = 20000;
+
+/** 電波が無い・届かないときの失敗。これだけは「あとで送り直す」扱いにする。 */
+function offlineError_() {
+  var e = new Error('電波がありません。記録はこの端末に残し、あとで送ります。');
+  e.offline = true;
+  return e;
+}
+
 function api(action, args) {
+  // 地下鉄では fetch が失敗せずに止まり続けることがあるので、時間で切る
+  var ctrl = typeof AbortController === 'function' ? new AbortController() : null;
+  var timer = ctrl ? setTimeout(function () { ctrl.abort(); }, API_TIMEOUT_MS) : null;
+
   return fetch(CONFIG.endpoint, {
     method: 'POST',
     headers: { 'Content-Type': 'text/plain;charset=utf-8' },
     body: JSON.stringify({ action: action, token: App.token, args: args || [] }),
+    signal: ctrl ? ctrl.signal : undefined,
   })
     .then(function (r) {
+      if (timer) clearTimeout(timer);
       if (!r.ok) throw new Error('サーバーが応答しません (' + r.status + ')');
       return r.json();
+    }, function () {
+      if (timer) clearTimeout(timer);
+      throw offlineError_();
     })
     .then(function (res) {
       if (!res || res.ok === false) {
@@ -121,6 +140,30 @@ function nowLocalInput() {
     'T' + pad2(jst.getHours()) + ':' + pad2(jst.getMinutes());
 }
 
+/** ミリ秒 -> 日本時間の ISO 文字列 '2026-10-27T08:15:00+09:00' */
+function msToIso(ms) {
+  var d = new Date(ms + 9 * 3600000);
+  return d.getUTCFullYear() + '-' + pad2(d.getUTCMonth() + 1) + '-' + pad2(d.getUTCDate()) +
+    'T' + pad2(d.getUTCHours()) + ':' + pad2(d.getUTCMinutes()) + ':' + pad2(d.getUTCSeconds()) +
+    '+09:00';
+}
+
+function isoToMs(iso) {
+  var t = Date.parse(String(iso || ''));
+  return isNaN(t) ? 0 : t;
+}
+
+function newId() {
+  if (window.crypto && typeof crypto.randomUUID === 'function') return crypto.randomUUID();
+  return 'c-' + Date.now().toString(36) + '-' + Math.random().toString(36).slice(2, 10);
+}
+
+/** 記録画面に出す全科目(9科目 + 横断) */
+function allSubjects() {
+  var s = App.stats || {};
+  return (s.subjectOrder || []).concat(s.crossSubjects || []);
+}
+
 function subjectColor(subject) {
   var colors = (App.stats && App.stats.colors) || {};
   return colors[subject] || '#9ba6b1';
@@ -156,6 +199,7 @@ function showView(name) {
 function applyStats(stats) {
   if (!stats) return;
   App.stats = stats;
+  saveCachedStats(stats);
   renderRecord();
   if (App.view === 'dashboard') renderDashboard();
 }

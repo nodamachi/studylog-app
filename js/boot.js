@@ -32,31 +32,57 @@ function boot() {
     history.replaceState(null, '', location.pathname + location.search);
   }
 
-  loadApp().catch(function () { forgetToken(); });
+  // トークンが違うときだけ api() の中でログアウトされる。
+  // 電波が無いだけならログアウトせず、保存しておいた画面で開く。
+  loadApp().catch(function () {});
 }
 
+/**
+ * まず手元に保存してある集計で画面を出し(電波が無くても開ける)、
+ * それからサーバーに問い合わせて差し替える。
+ */
 function loadApp() {
+  App.running = loadRunning();
+  var savedFormat = '';
+  try { savedFormat = localStorage.getItem('studylog_last_format') || ''; } catch (e) {}
+  App.lastFormat = savedFormat;
+
+  showApp(loadCachedStats() || fallbackStats());
+  flushOutbox();
+
   return api('bootstrap').then(function (d) {
-    App.stats = d.stats;
-    App.running = d.running;
-    App.lastFormat = d.lastFormat;
+    setOffline(false);
+    if (!App.lastFormat) App.lastFormat = d.lastFormat;
+    adoptServerRunning(d.running);
     App.prevStreak = d.stats && d.stats.streak ? d.stats.streak.days : null;
     App.currentDay = d.stats.today.dayKey;
-
-    document.getElementById('gate').hidden = true;
-    document.getElementById('app').hidden = false;
-
-    renderRecord();
-    showView('record');
-
-    if (App.running) {
-      openTimer();
-      if (App.running.elapsedSeconds >= (d.runawayHours || 3) * 3600) {
-        RUNAWAY_ASKED = true;
-        openRunaway(App.running.elapsedSeconds);
-      }
-    }
+    applyStats(d.stats);
+    if (App.running && document.getElementById('timer').hidden) openTimer();
+  }).catch(function (e) {
+    if (e && e.offline) setOffline(true);
+    throw e;
   });
+}
+
+function showApp(stats) {
+  App.stats = stats;
+  if (!App.currentDay) App.currentDay = stats.today.dayKey;
+  if (!App.lastFormat) App.lastFormat = (stats.formats || [''])[0];
+
+  document.getElementById('gate').hidden = true;
+  document.getElementById('app').hidden = false;
+
+  renderRecord();
+  showView('record');
+
+  if (App.running) {
+    openTimer();
+    var sec = Math.floor(runningElapsedMs(App.running) / 1000);
+    if (sec >= 3 * 3600) {
+      RUNAWAY_ASKED = true;
+      openRunaway(sec);
+    }
+  }
 }
 
 function submitToken() {
@@ -74,8 +100,13 @@ function submitToken() {
       input.value = '';
       return loadApp();
     })
-    .catch(function () {
+    .catch(function (e) {
       App.token = '';
+      if (e && e.offline) {
+        err.textContent = '電波がありません。つながる場所でもう一度。';
+      } else {
+        err.textContent = 'トークンが違います。';
+      }
       err.hidden = false;
     });
 }
@@ -118,18 +149,25 @@ function bindEvents() {
     var v = document.getElementById('runaway-end').value;
     if (!v) return;
     closeRunaway();
-    doStop(localInputToIso(v));
+    doStop(isoToMs(localInputToIso(v)));
   });
 
   document.getElementById('btn-sync').addEventListener('click', function () {
     toast('同期しています…');
-    api('sync')
+    flushOutbox()
+      .then(function () { return api('sync'); })
       .then(function (d) {
+        setOffline(false);
         applyStats(d.stats);
         var r = d.result || {};
-        toast('同期しました（追加 ' + (r.added || 0) + ' / 更新 ' + (r.updated || 0) + '）');
+        var left = loadOutbox().length;
+        toast('同期しました（追加 ' + (r.added || 0) + ' / 更新 ' + (r.updated || 0) + '）' +
+          (left ? '\n未送信が ' + left + ' 件残っています' : ''));
       })
-      .catch(function (e) { toast(e.message); });
+      .catch(function (e) {
+        if (e && e.offline) setOffline(true);
+        toast(e.message);
+      });
   });
 
   document.getElementById('btn-logout').addEventListener('click', function () {
@@ -137,21 +175,31 @@ function bindEvents() {
     toast('トークンを消しました');
   });
 
-  // 別の端末で開始・停止された場合に追随する
+  // 画面に戻ったとき: 溜まっている記録を送り、集計を取り直す。
+  // iPhone は閉じている間に送れないので、ここが主な送信の機会になる。
   document.addEventListener('visibilitychange', function () {
     if (document.visibilityState !== 'visible' || !App.token) return;
-    api('stats')
-      .then(function (d) {
-        App.running = d.running;
-        applyStats(d.stats);
-        if (App.running) {
-          if (document.getElementById('timer').hidden) openTimer();
-        } else {
-          closeTimer();
-        }
-      })
-      .catch(function () {});
+    if (App.running) tickTimer();
+    refreshFromServer();
   });
+
+  // 電波が戻ったとき
+  window.addEventListener('online', function () {
+    if (App.token) refreshFromServer();
+  });
+  window.addEventListener('offline', function () { setOffline(true); });
+}
+
+function refreshFromServer() {
+  flushOutbox()
+    .then(function () { return api('stats'); })
+    .then(function (d) {
+      setOffline(false);
+      applyStats(d.stats);
+    })
+    .catch(function (e) {
+      if (e && e.offline) setOffline(true);
+    });
 }
 
 if (document.readyState === 'loading') {

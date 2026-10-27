@@ -2,12 +2,13 @@
    Service Worker
 
    殻(HTML/CSS/JS/アイコン)だけをキャッシュする。
-   記録そのものは GAS にあるので、オフラインでは画面が開くだけで
-   データは出ない。中途半端なオフライン書き込みは同期の衝突を生むので作らない。
+   記録の本体は GAS にある。電波が無いときは、端末に保存した最後の集計で
+   画面を出し、新しい記録は端末の「未送信の箱」に溜めてあとで送る(js/offline.js)。
+   送るのは追加だけで、編集・削除は電波があるときに限る(衝突を作らないため)。
 
    ファイルを更新したら CACHE の版を上げること。上げないと古い殻が残る。
    =========================================================== */
-var CACHE = 'yobi-studylog-v1';
+var CACHE = 'yobi-studylog-v2';
 
 var ASSETS = [
   './',
@@ -15,6 +16,7 @@ var ASSETS = [
   './app.css',
   './config.js',
   './js/core.js',
+  './js/offline.js',
   './js/record.js',
   './js/dashboard.js',
   './js/history.js',

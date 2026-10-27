@@ -44,6 +44,7 @@
   <section id="view-record" class="view" data-view="record">
     <header class="topbar">
       <span id="record-date" class="topbar-date num"></span>
+      <span class="net-status" role="status" hidden></span>
       <span class="topbar-today">今日 <b id="record-today" class="num">0:00</b></span>
     </header>
     <div id="format-row" class="format-row" role="group" aria-label="学習形式"></div>
@@ -126,6 +127,7 @@
       <button id="day-prev" class="linkbtn" type="button" aria-label="前の日">‹</button>
       <span id="day-label" class="topbar-date num"></span>
       <button id="day-next" class="linkbtn" type="button" aria-label="次の日">›</button>
+      <span class="net-status" hidden></span>
       <span class="topbar-today">合計 <b id="day-total" class="num">0:00</b></span>
     </header>
     <div id="timeline" class="tl"></div>
@@ -220,6 +222,7 @@
 
 <script src="config.js"></script>
 <script src="js/core.js"></script>
+<script src="js/offline.js"></script>
 <script src="js/record.js"></script>
 <script src="js/dashboard.js"></script>
 <script src="js/history.js"></script>
