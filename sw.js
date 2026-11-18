@@ -8,7 +8,7 @@
 
    ファイルを更新したら CACHE の版を上げること。上げないと古い殻が残る。
    =========================================================== */
-var CACHE = 'yobi-studylog-v3';
+var CACHE = 'yobi-studylog-v4';
 
 var ASSETS = [
   './',

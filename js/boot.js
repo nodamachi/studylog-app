@@ -223,17 +223,21 @@ function applyTheme(theme) {
   if (tc) tc.setAttribute('content', light ? '#f4f5f8' : '#0f1116');
   var cs = document.querySelector('meta[name="color-scheme"]');
   if (cs) cs.setAttribute('content', light ? 'light' : 'dark');
-  var btn = document.getElementById('btn-theme');
-  if (btn) btn.textContent = light ? '暗く' : '明るく';
+  var btns = document.querySelectorAll('.theme-btn');
+  for (var i = 0; i < btns.length; i++) {
+    btns[i].textContent = light ? 'ダークモード：オフ' : 'ダークモード：オン';
+    btns[i].setAttribute('aria-pressed', light ? 'false' : 'true');
+  }
 }
 
 function bindThemeToggle() {
-  var btn = document.getElementById('btn-theme');
-  if (!btn) return;
   applyTheme(document.documentElement.getAttribute('data-theme'));
-  btn.addEventListener('click', function () {
-    var next = document.documentElement.getAttribute('data-theme') === 'light' ? 'dark' : 'light';
-    applyTheme(next);
-    try { localStorage.setItem(THEME_KEY, next); } catch (e) {}
-  });
+  var btns = document.querySelectorAll('.theme-btn');
+  for (var i = 0; i < btns.length; i++) {
+    btns[i].addEventListener('click', function () {
+      var next = document.documentElement.getAttribute('data-theme') === 'light' ? 'dark' : 'light';
+      applyTheme(next);
+      try { localStorage.setItem(THEME_KEY, next); } catch (e) {}
+    });
+  }
 }
