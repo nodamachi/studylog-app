@@ -152,6 +152,8 @@ function bindEvents() {
     doStop(isoToMs(localInputToIso(v)));
   });
 
+  bindThemeToggle();
+
   document.getElementById('btn-sync').addEventListener('click', function () {
     toast('同期しています…');
     flushOutbox()
@@ -206,4 +208,32 @@ if (document.readyState === 'loading') {
   document.addEventListener('DOMContentLoaded', boot);
 } else {
   boot();
+}
+
+/* ---------- 表示テーマ(ダーク／ライト) ----------
+   既定はダーク。選んだ側を端末の localStorage に残す。
+   最初の適用は index.html の <head> の小さなスクリプトが描画前に行う。 */
+
+var THEME_KEY = 'studylog-theme';
+
+function applyTheme(theme) {
+  var light = theme === 'light';
+  document.documentElement.setAttribute('data-theme', light ? 'light' : 'dark');
+  var tc = document.querySelector('meta[name="theme-color"]');
+  if (tc) tc.setAttribute('content', light ? '#f4f5f8' : '#0f1116');
+  var cs = document.querySelector('meta[name="color-scheme"]');
+  if (cs) cs.setAttribute('content', light ? 'light' : 'dark');
+  var btn = document.getElementById('btn-theme');
+  if (btn) btn.textContent = light ? '暗く' : '明るく';
+}
+
+function bindThemeToggle() {
+  var btn = document.getElementById('btn-theme');
+  if (!btn) return;
+  applyTheme(document.documentElement.getAttribute('data-theme'));
+  btn.addEventListener('click', function () {
+    var next = document.documentElement.getAttribute('data-theme') === 'light' ? 'dark' : 'light';
+    applyTheme(next);
+    try { localStorage.setItem(THEME_KEY, next); } catch (e) {}
+  });
 }

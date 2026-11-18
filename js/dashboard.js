@@ -6,7 +6,8 @@ var RING1_CIRC = 2 * Math.PI * 70;
 var RING2_CIRC = 2 * Math.PI * 55;
 var BAR_MAX = 78;          // バー本体に使える高さ(px)。残りはラベル。
 var BAR_LABEL_SPACE = 22;
-var HEAT_LEVELS = ['#1d2230', '#2b3348', '#3f4b6b', '#5d6f9c', '#8fa0c4'];
+// 色はテーマごとに app.css の --heat-0〜4 で決める
+var HEAT_LEVELS = ['var(--heat-0)', 'var(--heat-1)', 'var(--heat-2)', 'var(--heat-3)', 'var(--heat-4)'];
 
 function renderDashboard() {
   var s = App.stats;

@@ -1,6 +1,6 @@
 /* ===========================================================
    予備試験 学習ログ — デザイントークンと全スタイル
-   ダーク固定。夜に使う道具として、暗いことを前提に組む。
+   既定はダーク(夜に使う道具なので)。html[data-theme="light"] でライトに切り替える。
    =========================================================== */
 :root {
   --bg: #0f1116;
@@ -17,6 +17,16 @@
   --danger-bg: #4a2320;
   --danger-fg: #ffc4bd;
 
+  --tabbar-bg: rgba(15, 17, 22, .92);
+  --overlay: rgba(6, 8, 12, .72);
+  --bar-today: #2b3348;
+  --goal-line: #3f4759;
+  --heat-0: #1d2230;
+  --heat-1: #2b3348;
+  --heat-2: #3f4b6b;
+  --heat-3: #5d6f9c;
+  --heat-4: #8fa0c4;
+
   --jp: "Noto Sans JP", "Yu Gothic UI", "Hiragino Sans", Meiryo, sans-serif;
   --num: "IBM Plex Sans", "Segoe UI", system-ui, -apple-system, sans-serif;
 
@@ -27,6 +37,39 @@
 
   --dur: 280ms;
   --ease: cubic-bezier(.22, .61, .36, 1);
+}
+
+/* ライト。--ring-2(達成の色)はダークの白に当たる、いちばん濃い墨にする */
+html[data-theme="light"] {
+  color-scheme: light;
+  --bg: #f4f5f8;
+  --surface: #ffffff;
+  --surface-2: #e9ecf2;
+  --line: #dce0e8;
+  --text: #161a22;
+  --dim: #5a6274;
+  --dimmer: #8b93a7;
+
+  --ring-1: #5d6f9c;
+  --ring-2: #0b0d12;
+
+  --danger-bg: #fbe1dd;
+  --danger-fg: #a3261b;
+
+  --tabbar-bg: rgba(244, 245, 248, .92);
+  --overlay: rgba(20, 24, 32, .40);
+  --bar-today: #d6dcea;
+  --goal-line: #b4bccc;
+  --heat-0: #e9ecf2;
+  --heat-1: #cfd6e6;
+  --heat-2: #a7b3cf;
+  --heat-3: #7787b0;
+  --heat-4: #4a5a86;
+}
+html[data-theme="dark"] { color-scheme: dark; }
+/* 科目色はダーク向けの明るい色なので、ライトでは文字に使うときだけ黒を混ぜて読めるようにする */
+html[data-theme="light"] :is(.tile-name, .timer-subject, .stale-name, .tl-block .s) {
+  color: color-mix(in srgb, var(--c) 58%, #000);
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -136,7 +179,7 @@ button, .tile, .tab, .format-btn { touch-action: manipulation; }
   height: calc(var(--tabbar-h) + var(--safe-bottom));
   padding-bottom: var(--safe-bottom);
   display: flex;
-  background: rgba(15, 17, 22, .92);
+  background: var(--tabbar-bg);
   -webkit-backdrop-filter: blur(12px);
   backdrop-filter: blur(12px);
   border-top: 1px solid var(--line);
@@ -289,9 +332,9 @@ button, .tile, .tab, .format-btn { touch-action: manipulation; }
 .bars { display: flex; align-items: flex-end; gap: 7px; height: 100px; position: relative; }
 .bar-col { flex: 1; display: flex; flex-direction: column; justify-content: flex-end; height: 100%; gap: 6px; }
 .bar { background: var(--surface-2); border-radius: 3px 3px 0 0; border-top: 2px solid var(--dim); min-height: 2px; transition: height var(--dur) var(--ease); }
-.bar.is-today { border-top-color: var(--ring-2); background: #2b3348; }
+.bar.is-today { border-top-color: var(--ring-2); background: var(--bar-today); }
 .bar-lab { font-size: 9.5px; color: var(--dimmer); text-align: center; }
-.goal-line { position: absolute; left: 0; right: 0; border-top: 1px dashed #3f4759; pointer-events: none; }
+.goal-line { position: absolute; left: 0; right: 0; border-top: 1px dashed var(--goal-line); pointer-events: none; }
 .goal-tag { position: absolute; right: 0; font-size: 9px; color: var(--dimmer); transform: translateY(-100%); background: var(--surface); padding: 0 3px; }
 
 .stale { display: flex; align-items: center; gap: 9px; padding: 9px 0; border-bottom: 1px solid var(--line); }
@@ -380,7 +423,7 @@ button, .tile, .tab, .format-btn { touch-action: manipulation; }
   position: fixed;
   inset: 0;
   z-index: 70;
-  background: rgba(6, 8, 12, .72);
+  background: var(--overlay);
   display: flex;
   align-items: flex-end;
   justify-content: center;
